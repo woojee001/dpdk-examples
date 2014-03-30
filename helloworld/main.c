@@ -63,12 +63,19 @@ MAIN(int argc, char **argv)
 	int ret;
 	unsigned lcore_id;
 
+	/* rte_eal_init should be executed on the master core only, as
+	 * soon as possible after the application launch */
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
 		rte_panic("Cannot init EAL\n");
 
-	/* call lcore_hello() on every slave lcore */
+	/* call lcore_hello() on every slave lcore. The macro RTE_LCORE_FOREACH_SLAVE
+	 * loops over all running lcores except the master lcore */
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+		/* rte_eal_remote_launch sends a message to each lcore in the
+		 * WAIT state (which is true after the first call to rte_eal_init.
+		 * When the waiting lcore receives the message, it finishes executing
+		 * the function with the argument, and changes to a FINISHED state */
 		rte_eal_remote_launch(lcore_hello, NULL, lcore_id);
 	}
 
