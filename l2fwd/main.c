@@ -337,6 +337,7 @@ l2fwd_main_loop(void)
 			for (portid = 0; portid < RTE_MAX_ETHPORTS; portid++) {
 				if (qconf->tx_mbufs[portid].len == 0)
 					continue;
+				printf("l2fwd_send_burst()\n");
 				l2fwd_send_burst(&lcore_queue_conf[lcore_id],
 						 qconf->tx_mbufs[portid].len,
 						 (uint8_t) portid);
@@ -599,7 +600,7 @@ MAIN(int argc, char **argv)
 	if (ret < 0)
 		rte_exit(EXIT_FAILURE, "Invalid L2FWD arguments\n");
 
-	/* create the mbuf pool */
+	/* This creates NB_MBUF (=8192) mbufs of size MBUF_SIZE (2048) + smth*/
 	l2fwd_pktmbuf_pool =
 		rte_mempool_create("mbuf_pool", NB_MBUF,
 				   MBUF_SIZE, 32,
@@ -633,7 +634,8 @@ MAIN(int argc, char **argv)
 	 * Each logical core is assigned a dedicated TX queue on each port.
 	 */
 	for (portid = 0; portid < nb_ports; portid++) {
-		/* skip ports that are not enabled */
+		/* skip ports that are not enabled. 
+		 * l2fwd_enabled_port_mask is set in parse_args() */
 		if ((l2fwd_enabled_port_mask & (1 << portid)) == 0)
 			continue;
 
